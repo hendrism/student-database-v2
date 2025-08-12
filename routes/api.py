@@ -63,7 +63,6 @@ def get_students():
         page = request.args.get('page', 1, type=int)
         per_page = min(request.args.get('per_page', 20, type=int), 100)
         search = request.args.get('search', '')
-        grade_filter = request.args.get('grade')
         active_only = request.args.get('active_only', 'true').lower() == 'true'
         
         # Build query
@@ -80,9 +79,6 @@ def get_students():
                     Student.anonymous_id.ilike(f'%{search}%')
                 )
             )
-            
-        if grade_filter:
-            query = query.filter(Student.grade_level == grade_filter)
         
         # Execute paginated query
         pagination = query.paginate(
@@ -155,27 +151,7 @@ def get_student(student_id):
         # Check privacy permissions
         include_sensitive = g.current_user.has_permission('admin')
         
-        # Include related data
-        include_goals = request.args.get('include_goals', 'false').lower() == 'true'
-        include_sessions = request.args.get('include_sessions', 'false').lower() == 'true'
-        include_trials = request.args.get('include_trials', 'false').lower() == 'true'
-        
-        student_data = student.to_dict(include_sensitive=include_sensitive)
-        
-        if include_goals:
-            student_data['goals'] = [goal.to_dict() for goal in student.goals if goal.active]
-            
-        if include_sessions:
-            recent_sessions = [s for s in student.sessions if 
-                             (datetime.now().date() - s.session_date).days <= 30]
-            student_data['recent_sessions'] = [session.to_dict() for session in recent_sessions]
-            
-        if include_trials:
-            recent_trials = [t for t in student.trial_logs if 
-                           (datetime.now().date() - t.session_date).days <= 30]
-            student_data['recent_trials'] = [trial.to_dict() for trial in recent_trials]
-        
-        return jsonify(student_data)
+        return jsonify(student.to_dict(include_sensitive=include_sensitive))
         
     except Exception as e:
         current_app.logger.error(f'Error retrieving student {student_id}: {str(e)}')
@@ -214,58 +190,6 @@ def update_student(student_id):
         return jsonify({'error': 'Failed to update student'}), 500
 
 # Trial Logs API
-@api_bp.route('/students/<int:student_id>/trial-logs', methods=['GET'])
-@require_auth
-def get_trial_logs(student_id):
-    """Get trial logs for a specific student."""
-    try:
-        student = Student.query.get_or_404(student_id)
-        
-        # Get query parameters
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        objective_id = request.args.get('objective_id', type=int)
-        
-        # Build query
-        query = TrialLog.query.filter(TrialLog.student_id == student_id)
-        
-        if start_date:
-            try:
-                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-                query = query.filter(TrialLog.session_date >= start_date)
-            except ValueError:
-                return jsonify({'error': 'Invalid start_date format. Use YYYY-MM-DD'}), 400
-                
-        if end_date:
-            try:
-                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-                query = query.filter(TrialLog.session_date <= end_date)
-            except ValueError:
-                return jsonify({'error': 'Invalid end_date format. Use YYYY-MM-DD'}), 400
-                
-        if objective_id:
-            query = query.filter(TrialLog.objective_id == objective_id)
-        
-        trial_logs = query.order_by(TrialLog.session_date.desc()).all()
-        
-        # Include objective information
-        logs_data = []
-        for log in trial_logs:
-            log_dict = log.to_dict()
-            if log.objective:
-                log_dict['objective'] = {
-                    'id': log.objective.id,
-                    'description': log.objective.description,
-                    'goal_description': log.objective.goal.description
-                }
-            logs_data.append(log_dict)
-        
-        return jsonify({'trial_logs': logs_data})
-        
-    except Exception as e:
-        current_app.logger.error(f'Error retrieving trial logs for student {student_id}: {str(e)}')
-        return jsonify({'error': 'Failed to retrieve trial logs'}), 500
-
 @api_bp.route('/students/<int:student_id>/trial-logs', methods=['POST'])
 @require_auth
 @require_permission('write')
@@ -316,7 +240,6 @@ def get_dashboard_analytics():
     """Get dashboard analytics data."""
     try:
         from datetime import timedelta
-        from sqlalchemy import func
         
         today = date.today()
         one_week_ago = today - timedelta(days=7)
@@ -346,29 +269,13 @@ def get_dashboard_analytics():
             (completed_sessions / total_sessions) * 100, 1
         ) if total_sessions > 0 else 0
         
-        # Recent activity
-        recent_sessions = Session.query.filter(
-            Session.session_date >= one_week_ago
-        ).order_by(Session.session_date.desc()).limit(5).all()
-        
-        recent_activity = []
-        for session in recent_sessions:
-            recent_activity.append({
-                'type': 'session',
-                'date': session.session_date.isoformat(),
-                'student_name': session.student.display_name,
-                'status': session.status,
-                'description': f"{session.session_type} session"
-            })
-        
         return jsonify({
             'stats': {
                 'total_students': total_students,
                 'total_goals': total_goals,
                 'sessions_this_week': sessions_this_week,
                 'completion_rate': completion_rate
-            },
-            'recent_activity': recent_activity
+            }
         })
         
     except Exception as e:

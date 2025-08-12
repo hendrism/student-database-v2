@@ -11,7 +11,6 @@ from flask_cors import CORS
 # Import your custom modules
 from config.settings import config
 from models import db
-from auth.models import User
 from routes import register_blueprints
 
 def create_app(config_name=None):
@@ -45,6 +44,9 @@ def create_app(config_name=None):
         # Ensure instance directory exists
         instance_path = Path(app.instance_path)
         instance_path.mkdir(exist_ok=True)
+        
+        # Import models to create tables
+        from models import User, Student, Goal, Objective, TrialLog, Session, SOAPNote
         
         # Create all database tables
         db.create_all()
@@ -87,13 +89,11 @@ def setup_error_handlers(app):
 def initialize_default_data():
     """Initialize default data if database is empty."""
     # Check if we need to create default data
+    from models import User
     if User.query.first() is not None:
         return
     
-    print("Database is empty, initializing with default data...")
-    
-    # This will be called by the create_admin script instead
-    pass
+    print("Database is empty, run scripts/create_admin.py to create admin user")
 
 # Create app instance
 app = create_app()

@@ -56,3 +56,25 @@ def require_role(role):
         
         return decorated_function
     return decorator
+
+# Aliases for compatibility with route imports
+token_required = require_auth
+
+def role_required(roles):
+    """Decorator to require one of the specified roles."""
+    if isinstance(roles, str):
+        roles = [roles]
+    
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not hasattr(g, 'current_user'):
+                return jsonify({'error': 'Authentication required'}), 401
+            
+            if g.current_user.role not in roles:
+                return jsonify({'error': f'Requires one of roles: {", ".join(roles)}'}), 403
+            
+            return f(*args, **kwargs)
+        
+        return decorated_function
+    return decorator

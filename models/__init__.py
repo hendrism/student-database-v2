@@ -6,3 +6,5 @@ db = SQLAlchemy()
 from .student import Student, Goal, Objective
 from .session import Session, TrialLog
 from .soap import SOAPNote
+# Import User from auth package (moved from models.auth to avoid duplication)
+from auth.models import User
