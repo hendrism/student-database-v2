@@ -1,10 +1,11 @@
+# models/session.py - Enhanced with all Event model features
 from datetime import datetime, date, time
 from sqlalchemy.ext.hybrid import hybrid_property
 from . import db
 from .student import AuditMixin
 
 class Session(db.Model, AuditMixin):
-    """Session model with comprehensive tracking."""
+    """Enhanced session model combining Session + Event functionality."""
     
     __tablename__ = 'sessions'
     
@@ -14,13 +15,31 @@ class Session(db.Model, AuditMixin):
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
     
+    # Event type classification
+    event_type = db.Column(db.String(50), default='Session', nullable=False)
+    # Options: Session, Meeting, Assessment, Reminder, Other
+    
     session_type = db.Column(db.String(50), default='Individual', nullable=False)
+    # Options: Individual, Group, Assessment, Consultation
+    
     status = db.Column(db.String(50), default='Scheduled', nullable=False)
+    # Options: Scheduled, Completed, Cancelled, No Show, Makeup Needed, Excused Absence
+    
     location = db.Column(db.String(100))
     notes = db.Column(db.Text)
+    plan_notes = db.Column(db.Text)  # For session planning
+    
+    # Makeup system
+    makeup_for_session_id = db.Column(db.Integer, db.ForeignKey('sessions.id'))
+    is_makeup = db.Column(db.Boolean, default=False)
+    
+    # Billing and compliance
+    billable_units = db.Column(db.Numeric(4, 2))
+    service_code = db.Column(db.String(20))
     
     # Relationships
     student = db.relationship('Student', back_populates='sessions')
+    makeup_session = db.relationship('Session', remote_side=[id], backref='original_session')
     
     @hybrid_property
     def duration_minutes(self):
@@ -31,6 +50,33 @@ class Session(db.Model, AuditMixin):
             return int((end_datetime - start_datetime).total_seconds() / 60)
         return 0
     
+    @hybrid_property
+    def is_therapy_session(self):
+        """Check if this is a billable therapy session."""
+        return self.event_type == 'Session' and self.session_type in ['Individual', 'Group']
+    
+    @hybrid_property
+    def needs_makeup(self):
+        """Check if session needs a makeup."""
+        return self.status == 'Makeup Needed' and not self.is_makeup
+    
+    def create_makeup_session(self, new_date, new_start_time, new_end_time):
+        """Create a makeup session for this session."""
+        makeup = Session(
+            student_id=self.student_id,
+            session_date=new_date,
+            start_time=new_start_time,
+            end_time=new_end_time,
+            event_type=self.event_type,
+            session_type=self.session_type,
+            location=self.location,
+            makeup_for_session_id=self.id,
+            is_makeup=True,
+            notes=f"Makeup for {self.session_date.strftime('%m/%d/%Y')} session"
+        )
+        db.session.add(makeup)
+        return makeup
+    
     def to_dict(self):
         return {
             'id': self.id,
@@ -38,115 +84,112 @@ class Session(db.Model, AuditMixin):
             'session_date': self.session_date.isoformat(),
             'start_time': self.start_time.strftime('%H:%M'),
             'end_time': self.end_time.strftime('%H:%M'),
+            'event_type': self.event_type,
             'session_type': self.session_type,
             'status': self.status,
             'location': self.location,
             'notes': self.notes,
+            'plan_notes': self.plan_notes,
             'duration_minutes': self.duration_minutes,
+            'is_makeup': self.is_makeup,
+            'makeup_for_session_id': self.makeup_for_session_id,
+            'billable_units': float(self.billable_units) if self.billable_units else None,
+            'service_code': self.service_code,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
-
-class TrialLog(db.Model, AuditMixin):
-    """Enhanced trial log with comprehensive tracking."""
     
-    __tablename__ = 'trial_logs'
+    def to_calendar_event(self):
+        """Convert to FullCalendar event format."""
+        status_colors = {
+            'Scheduled': '#007bff',
+            'Completed': '#28a745', 
+            'Makeup Needed': '#ffc107',
+            'Excused Absence': '#6c757d',
+            'Cancelled': '#dc3545',
+            'No Show': '#dc3545'
+        }
+        
+        return {
+            'id': self.id,
+            'title': f"{self.student.display_name} - {self.session_type}",
+            'start': f"{self.session_date}T{self.start_time}",
+            'end': f"{self.session_date}T{self.end_time}",
+            'backgroundColor': status_colors.get(self.status, '#007bff'),
+            'borderColor': status_colors.get(self.status, '#007bff'),
+            'textColor': '#ffffff',
+            'extendedProps': {
+                'studentId': self.student_id,
+                'studentName': self.student.display_name,
+                'eventType': self.event_type,
+                'sessionType': self.session_type,
+                'status': self.status,
+                'location': self.location,
+                'notes': self.notes,
+                'planNotes': self.plan_notes,
+                'isMakeup': self.is_makeup,
+                'needsMakeup': self.needs_makeup
+            }
+        }
+
+class MonthlyQuota(db.Model, AuditMixin):
+    """Track required monthly sessions per student."""
+    
+    __tablename__ = 'monthly_quotas'
     
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
-    objective_id = db.Column(db.Integer, db.ForeignKey('objectives.id'), nullable=True)
-    session_date = db.Column(db.Date, default=date.today, nullable=False)
-    
-    # New support level system
-    independent = db.Column(db.Integer, default=0)
-    minimal_support = db.Column(db.Integer, default=0)
-    moderate_support = db.Column(db.Integer, default=0)
-    maximal_support = db.Column(db.Integer, default=0)
-    incorrect = db.Column(db.Integer, default=0)
-    
-    # Legacy support system (for migration compatibility)
-    correct_no_support = db.Column(db.Integer, default=0)
-    correct_visual_cue = db.Column(db.Integer, default=0)
-    correct_verbal_cue = db.Column(db.Integer, default=0)
-    correct_visual_verbal_cue = db.Column(db.Integer, default=0)
-    correct_modeling = db.Column(db.Integer, default=0)
-    incorrect_legacy = db.Column(db.Integer, default=0)
-    
-    # Additional tracking
-    session_notes = db.Column(db.Text)
-    environmental_factors = db.Column(db.String(200))
+    month = db.Column(db.String(7), nullable=False)  # YYYY-MM format
+    required_sessions = db.Column(db.Integer, nullable=False)
     
     # Relationships
-    student = db.relationship('Student', back_populates='trial_logs')
-    objective = db.relationship('Objective', back_populates='trial_logs')
-    
-    def uses_new_system(self):
-        """Return True if using new support level system."""
-        return any(
-            (getattr(self, attr) or 0) > 0
-            for attr in ['independent', 'minimal_support', 'moderate_support', 'maximal_support']
-        )
-    
-    def uses_legacy_system(self):
-        """Return True if using legacy support system."""
-        return any(
-            (getattr(self, attr) or 0) > 0
-            for attr in ['correct_no_support', 'correct_visual_cue', 'correct_verbal_cue',
-                        'correct_visual_verbal_cue', 'correct_modeling']
-        )
-    
-    @hybrid_property
-    def total_trials(self):
-        """Total trials using legacy system."""
-        return (self.correct_no_support + self.correct_visual_cue + 
-                self.correct_verbal_cue + self.correct_visual_verbal_cue + 
-                self.correct_modeling + (self.incorrect_legacy or 0))
-    
-    def total_trials_new(self):
-        """Total trials using new system."""
-        return (self.independent + self.minimal_support + 
-                self.moderate_support + self.maximal_support + self.incorrect)
-    
-    @hybrid_property
-    def independence_percentage(self):
-        """Calculate independence percentage for new system."""
-        total = self.total_trials_new()
-        return round((self.independent / total) * 100, 1) if total > 0 else 0
-    
-    @hybrid_property
-    def success_percentage(self):
-        """Calculate percentage of successful trials (all support levels)."""
-        total = self.total_trials_new()
-        successful = (self.independent + self.minimal_support + 
-                     self.moderate_support + self.maximal_support)
-        return round((successful / total) * 100, 1) if total > 0 else 0
-    
-    def percent_correct_up_to(self, support_level):
-        """Return percent correct at or below the specified support level."""
-        level_order = ['independent', 'minimal_support', 'moderate_support', 'maximal_support']
-        total = self.total_trials_new()
-        if total == 0 or support_level not in level_order:
-            return 0.0
-        idx = level_order.index(support_level) + 1
-        correct_sum = sum((getattr(self, lvl) or 0) for lvl in level_order[:idx])
-        return round((correct_sum / total) * 100, 1)
+    student = db.relationship('Student')
     
     def to_dict(self):
         return {
             'id': self.id,
             'student_id': self.student_id,
-            'objective_id': self.objective_id,
-            'session_date': self.session_date.isoformat(),
-            'independent': self.independent,
-            'minimal_support': self.minimal_support,
-            'moderate_support': self.moderate_support,
-            'maximal_support': self.maximal_support,
-            'incorrect': self.incorrect,
-            'total_trials': self.total_trials_new(),
-            'independence_percentage': self.independence_percentage,
-            'success_percentage': self.success_percentage,
-            'session_notes': self.session_notes,
-            'environmental_factors': self.environmental_factors,
-            'uses_new_system': self.uses_new_system(),
-            'uses_legacy_system': self.uses_legacy_system(),
+            'month': self.month,
+            'required_sessions': self.required_sessions
+        }
+
+class QuarterlyReport(db.Model, AuditMixin):
+    """Store generated quarterly progress reports."""
+    
+    __tablename__ = 'quarterly_reports'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    quarter = db.Column(db.String(20), nullable=False)  # e.g., "Q1 2024"
+    report_text = db.Column(db.Text, nullable=False)
+    generated_by = db.Column(db.String(100))
+    
+    # Relationships
+    student = db.relationship('Student')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'student_id': self.student_id,
+            'quarter': self.quarter,
+            'report_text': self.report_text,
+            'generated_by': self.generated_by,
             'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+class Activity(db.Model, AuditMixin):
+    """Therapy activities for SOAP note templates."""
+    
+    __tablename__ = 'activities'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50))  # Articulation, Language, Fluency, etc.
+    active = db.Column(db.Boolean, default=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'category': self.category,
+            'active': self.active
         }
