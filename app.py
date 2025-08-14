@@ -1,5 +1,3 @@
-"""Flask application entry point for the Student Database v2.0."""
-
 import os
 import logging
 from datetime import datetime, timedelta
