@@ -1,4 +1,4 @@
-from datetime import datetime, date, time
+from datetime import datetime, date
 from sqlalchemy.ext.hybrid import hybrid_property
 from . import db
 

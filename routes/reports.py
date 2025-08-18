@@ -9,6 +9,7 @@ import logging
 # Import report functions locally to handle missing dependencies
 try:
     from utils.reports import generate_progress_report, generate_analytics_data
+    _ = generate_progress_report, generate_analytics_data
     REPORTS_AVAILABLE = True
 except ImportError:
     REPORTS_AVAILABLE = False
@@ -42,7 +43,7 @@ def get_student_progress_report(student_id):
         # Get student's goals and objectives
         goals = Goal.query.filter(
             Goal.student_id == student_id,
-            Goal.active == True
+            Goal.active.is_(True)
         ).all()
         
         # Get trial logs in date range
@@ -61,7 +62,7 @@ def get_student_progress_report(student_id):
         soap_notes = SOAPNote.query.filter(
             SOAPNote.student_id == student_id,
             SOAPNote.session_date.between(start_date_obj, end_date_obj),
-            SOAPNote.anonymized == False
+            SOAPNote.anonymized.is_(False)
         ).order_by(SOAPNote.session_date).all()
         
         # Calculate progress metrics
@@ -168,14 +169,14 @@ def get_analytics_overview():
         end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
         
         # Overall student statistics
-        total_students = Student.query.filter(Student.active == True).count()
-        anonymized_students = Student.query.filter(Student.anonymized == True).count()
+        total_students = Student.query.filter(Student.active.is_(True)).count()
+        anonymized_students = Student.query.filter(Student.anonymized.is_(True)).count()
         
         # Grade level distribution
         grade_distribution = db.session.query(
             Student.grade_level,
             db.func.count(Student.id).label('count')
-        ).filter(Student.active == True).group_by(Student.grade_level).all()
+        ).filter(Student.active.is_(True)).group_by(Student.grade_level).all()
         
         # Session analytics
         total_sessions = Session.query.filter(
@@ -268,7 +269,7 @@ def get_goal_progress_summary():
         # Optional student filter
         student_id = request.args.get('student_id', type=int)
         
-        query = Goal.query.filter(Goal.active == True)
+        query = Goal.query.filter(Goal.active.is_(True))
         if student_id:
             query = query.filter(Goal.student_id == student_id)
         
@@ -454,7 +455,7 @@ def get_data_insights():
             db.func.avg(TrialLog.independence_percentage).label('avg_independence')
         ).join(TrialLog).filter(
             TrialLog.session_date >= (date.today() - timedelta(days=30)),
-            Student.active == True
+            Student.active.is_(True)
         ).group_by(Student.id).having(
             db.func.avg(TrialLog.independence_percentage) < 50
         ).all()
@@ -513,7 +514,7 @@ def get_data_insights():
             Student.last_name,
             db.func.max(TrialLog.independence_percentage).label('max_independence')
         ).join(Student).join(Objective).join(TrialLog).filter(
-            Goal.active == True,
+            Goal.active.is_(True),
             TrialLog.session_date >= (date.today() - timedelta(days=90))
         ).group_by(Goal.id).having(
             db.func.max(TrialLog.independence_percentage) >= 80
@@ -599,7 +600,10 @@ def export_report(report_type):
         
         # Generate data based on report type
         if report_type == 'students':
-            data = [student.to_dict() for student in Student.query.filter(Student.active == True).all()]
+            data = [
+                student.to_dict()
+                for student in Student.query.filter(Student.active.is_(True)).all()
+            ]
         elif report_type == 'sessions':
             sessions = Session.query.filter(
                 Session.session_date.between(start_date_obj, end_date_obj)
@@ -611,7 +615,7 @@ def export_report(report_type):
             ).all()
             data = [log.to_dict() for log in logs]
         elif report_type == 'goals':
-            goals = Goal.query.filter(Goal.active == True).all()
+            goals = Goal.query.filter(Goal.active.is_(True)).all()
             data = [goal.to_dict() for goal in goals]
         
         if format_type == 'json':

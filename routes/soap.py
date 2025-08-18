@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from marshmallow import Schema, fields, ValidationError, validate
 from extensions import db
-from models import SOAPNote, Student
+from models import SOAPNote
 from auth.decorators import require_auth
 
 soap_bp = Blueprint('soap', __name__, url_prefix='/api/soap')

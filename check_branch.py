@@ -64,9 +64,9 @@ def sqlalchemy_count_ok() -> tuple[bool, int]:
         check=False
     )
     lines = (out or "").splitlines()
-    count = len([l for l in lines if l.strip()])
-    for l in lines:
-        print(l)
+    count = len([line for line in lines if line.strip()])
+    for line in lines:
+        print(line)
     print(f"Found {count} SQLAlchemy() calls (excluding helper files)")
     return (count == 1, count)
 

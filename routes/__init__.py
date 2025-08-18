@@ -11,10 +11,11 @@ def register_blueprints(app):
     """Register all blueprints with the application."""
 
     # Import modules so their routes are attached to the shared blueprints
-    from . import api, auth
+    from . import api as _api, auth as _auth  # noqa: F401
     from .students import students_bp
     from .sessions import sessions_bp
     from .soap import soap_bp
+    from .calendar import calendar_bp
 
     # Register shared blueprints
     app.register_blueprint(bp_api, url_prefix='/api')
@@ -22,6 +23,7 @@ def register_blueprints(app):
     app.register_blueprint(students_bp)
     app.register_blueprint(sessions_bp)
     app.register_blueprint(soap_bp)
+    app.register_blueprint(calendar_bp)
 
     # Handle missing reports blueprint gracefully
     try:

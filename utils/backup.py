@@ -2,10 +2,9 @@ import os
 import json
 import gzip
 import shutil
-import sqlite3
 from datetime import datetime, date, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 from extensions import db
 from models import Student, Goal, Objective, Session, TrialLog, SOAPNote, User
 import logging
@@ -259,7 +258,6 @@ class DatabaseBackup:
             
             # Sort by date and keep minimum number regardless of age
             all_backups.sort(key=lambda x: x['created'], reverse=True)
-            to_keep = all_backups[:keep_minimum]
             candidates_for_deletion = all_backups[keep_minimum:]
             
             deleted_files = []

@@ -26,6 +26,7 @@ def test_database_setup():
     try:
         print("📦 Testing imports...")
         from config.settings import config
+        assert config  # ensure linter sees usage
         print("✅ Config imported successfully")
         
         from extensions import db

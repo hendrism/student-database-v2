@@ -63,7 +63,7 @@ class Student(db.Model, AuditMixin, PrivacyMixin):
     def anonymize(self):
         """Anonymize student data while preserving educational value."""
         super().anonymize()
-        self.first_name = f"Student"
+        self.first_name = "Student"
         self.last_name = f"{self.anonymous_id[:8]}"
         self.preferred_name = None
     

@@ -265,7 +265,7 @@ def create_bulk_sessions():
         session_date = datetime.strptime(bulk_data['session_date'], '%Y-%m-%d').date()
         default_duration = bulk_data.get('duration_minutes', 30)
         
-        students = Student.query.filter(Student.active == True).all()
+        students = Student.query.filter(Student.active.is_(True)).all()
         created_sessions = []
         
         for student in students:
@@ -279,7 +279,6 @@ def create_bulk_sessions():
                 continue
             
             # Calculate time slot (simple scheduling)
-            start_time = time(9, 0)  # Start at 9 AM
             session_count = len(created_sessions)
             start_minutes = 9 * 60 + (session_count * default_duration)
             
