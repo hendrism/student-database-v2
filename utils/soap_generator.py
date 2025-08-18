@@ -1,5 +1,6 @@
 # utils/soap_generator.py - Smart SOAP note generation
-from models import Student, Activity, TrialLog, Session
+from flask import current_app
+from models import Student, TrialLog, Session  # TODO: Activity model removed pending implementation
 import re
 from datetime import datetime, date
 

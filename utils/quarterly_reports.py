@@ -1,5 +1,10 @@
 # utils/quarterly_reports.py - Comprehensive quarterly report generation
-from models import Student, Goal, Objective, TrialLog, Session, QuarterlyReport, db
+from models import Student, Goal, Objective, TrialLog, Session, db
+try:
+    from models import QuarterlyReport
+except ImportError:
+    QuarterlyReport = None
+
 from datetime import datetime, date, timedelta
 import calendar
 
@@ -66,6 +71,9 @@ class QuarterlyReportGenerator:
         full_report = self._compile_report(report_sections)
         
         # Save report to database
+        if QuarterlyReport is None:
+            raise NotImplementedError("QuarterlyReport model missing")
+
         quarterly_report = QuarterlyReport(
             student_id=student_id,
             quarter=f"{quarter} {year}",
@@ -479,7 +487,7 @@ Key Highlights:
         ]
 
 # API Integration
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app, g
 from auth.decorators import require_auth, require_permission
 
 reports_bp = Blueprint('reports', __name__)
@@ -512,6 +520,9 @@ def get_quarterly_report_history(student_id):
     """Get historical quarterly reports for a student."""
     
     try:
+        if QuarterlyReport is None:
+            raise NotImplementedError("QuarterlyReport model missing")
+
         reports = QuarterlyReport.query.filter_by(
             student_id=student_id
         ).order_by(QuarterlyReport.created_at.desc()).all()
