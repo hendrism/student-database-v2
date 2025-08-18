@@ -227,8 +227,8 @@ class SOAPGenerator:
         # Calculate overall progress
         if trial_logs:
             overall_accuracy = self._calculate_accuracy(trial_logs)
-            independence_rate = self._calculate_independence_rate(trial_logs)
-            
+            independence_rate = self._calculate_independence_rate(trial_logs) or 0
+
             if independence_rate >= 80:
                 progress_level = "excellent"
                 progress_description = "consistent independent performance"
@@ -242,6 +242,7 @@ class SOAPGenerator:
                 progress_level = "emerging"
                 progress_description = "early skill development with maximal support"
         else:
+            independence_rate = 0
             progress_level = "baseline"
             progress_description = "baseline data collection"
         
