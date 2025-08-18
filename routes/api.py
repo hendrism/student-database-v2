@@ -24,7 +24,7 @@ def health_check():
             'timestamp': datetime.utcnow().isoformat()
         }), 503
 
-@bp_api.route('/api/v1/health', methods=['GET'])
+@bp_api.route('/v1/health', methods=['GET'])
 def health_check_v1():
     """Alias for /api/health for backward compatibility."""
     return health_check()
