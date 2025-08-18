@@ -64,7 +64,7 @@ def calculate_progress_metrics(trial_logs: List[TrialLog], goals: List[Goal]) ->
         }
     
     # Overall metrics
-    total_trials = sum(log.total_trials_new() for log in trial_logs)
+    total_trials = sum(log.total_trials for log in trial_logs)
     total_independent = sum(log.independent for log in trial_logs)
     average_independence = round((total_independent / total_trials) * 100, 1) if total_trials > 0 else 0
     
@@ -94,7 +94,7 @@ def calculate_progress_metrics(trial_logs: List[TrialLog], goals: List[Goal]) ->
         
         if goal_logs:
             goal_independence = calculate_independence_rate(goal_logs)
-            goal_trials = sum(log.total_trials_new() for log in goal_logs)
+            goal_trials = sum(log.total_trials for log in goal_logs)
             
             goal_progress.append({
                 'goal_id': goal.id,
@@ -117,7 +117,7 @@ def calculate_independence_rate(trial_logs: List[TrialLog]) -> float:
     if not trial_logs:
         return 0.0
     
-    total_trials = sum(log.total_trials_new() for log in trial_logs)
+    total_trials = sum(log.total_trials for log in trial_logs)
     total_independent = sum(log.independent for log in trial_logs)
     
     return round((total_independent / total_trials) * 100, 1) if total_trials > 0 else 0.0
@@ -218,7 +218,7 @@ def generate_analytics_data(date_range: Tuple[date, date]) -> Dict:
     ).all()
     
     if trial_logs:
-        total_trials = sum(log.total_trials_new() for log in trial_logs)
+        total_trials = sum(log.total_trials for log in trial_logs)
         average_independence = calculate_independence_rate(trial_logs)
     else:
         total_trials = 0

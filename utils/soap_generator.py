@@ -190,7 +190,7 @@ class SOAPGenerator:
                              area_data.get('objective_id') == log.objective_id]
                 
                 accuracy = self._calculate_accuracy(area_trials)
-                total_trials = sum(log.total_trials_new() for log in area_trials)
+                total_trials = sum(log.total_trials for log in area_trials)
                 support_level = self._determine_support_level(area_trials)
                 
                 objective_text = template.format(
@@ -308,7 +308,7 @@ class SOAPGenerator:
         if not trial_logs:
             return 0
             
-        total_trials = sum(log.total_trials_new() for log in trial_logs)
+        total_trials = sum(log.total_trials for log in trial_logs)
         correct_trials = sum(
             log.independent + log.minimal_support + 
             log.moderate_support + log.maximal_support 
@@ -322,7 +322,7 @@ class SOAPGenerator:
         if not trial_logs:
             return 0
             
-        total_trials = sum(log.total_trials_new() for log in trial_logs)
+        total_trials = sum(log.total_trials for log in trial_logs)
         independent_trials = sum(log.independent for log in trial_logs)
         
         return round((independent_trials / total_trials * 100)) if total_trials > 0 else 0

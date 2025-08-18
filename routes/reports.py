@@ -87,7 +87,7 @@ def get_student_progress_report(student_id):
                         progress_points.append({
                             'date': log.session_date.isoformat(),
                             'independence_rate': independence_rate,
-                            'total_trials': log.total_trials_new()
+                            'total_trials': log.total_trials
                         })
                     
                     # Calculate trend
