@@ -21,6 +21,17 @@ class RegisterSchema(Schema):
     last_name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
     role = fields.Str(validate=validate.OneOf(['clinician', 'intern', 'admin']), load_default='clinician')
 
+class RefreshSchema(Schema):
+    refresh_token = fields.Str(required=True, validate=validate.Length(min=16))
+
+
+def _get_bearer_token() -> str | None:
+    """Extract a Bearer token from the Authorization header, or None."""
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return None
+    return auth_header.split(' ', 1)[1].strip()
+
 def validate_password_strength(password):
     """Validate password meets security requirements."""
     if len(password) < 8:
@@ -80,16 +91,22 @@ def register():
     try:
         schema = RegisterSchema()
         data = schema.load(request.json)
+        # Normalize inputs
+        username_norm = data['username'].strip()
+        email_norm = data['email'].strip().lower()
+
         is_valid, message = validate_password_strength(data['password'])
         if not is_valid:
             return jsonify({'error': message}), 400
-        if User.query.filter_by(username=data['username']).first():
+
+        if User.query.filter_by(username=username_norm).first():
             return jsonify({'error': 'Username already exists'}), 409
-        if User.query.filter_by(email=data['email']).first():
+        if User.query.filter_by(email=email_norm).first():
             return jsonify({'error': 'Email already registered'}), 409
+
         user = User(
-            username=data['username'],
-            email=data['email'],
+            username=username_norm,
+            email=email_norm,
             first_name=data['first_name'],
             last_name=data['last_name'],
             role=data['role']
@@ -109,10 +126,9 @@ def register():
 def get_profile():
     """Get current user profile."""
     try:
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
+        token = _get_bearer_token()
+        if not token:
             return jsonify({'error': 'Authentication required'}), 401
-        token = auth_header.split(' ')[1]
         user = User.verify_token(token)
         if not user:
             return jsonify({'error': 'Invalid or expired token'}), 401
@@ -125,9 +141,8 @@ def get_profile():
 def logout():
     """User logout endpoint."""
     try:
-        auth_header = request.headers.get('Authorization')
-        if auth_header and auth_header.startswith('Bearer '):
-            token = auth_header.split(' ')[1]
+        token = _get_bearer_token()
+        if token:
             user = User.verify_token(token)
             if user:
                 current_app.logger.info(f'User {user.username} logged out')
@@ -140,15 +155,22 @@ def logout():
 def refresh_token():
     """Refresh access token using refresh token."""
     try:
-        data = request.json
-        if not data or 'refresh_token' not in data:
-            return jsonify({'error': 'Refresh token required'}), 400
-        user = User.verify_refresh_token(data['refresh_token'])
+        schema = RefreshSchema()
+        data = schema.load(request.json or {})
+        rt = data['refresh_token']
+
+        if not hasattr(User, 'verify_refresh_token') or not callable(getattr(User, 'verify_refresh_token')):
+            current_app.logger.error('verify_refresh_token is not implemented on User')
+            return jsonify({'error': 'Refresh token verification not implemented'}), 501
+
+        user = User.verify_refresh_token(rt)
         if not user:
             return jsonify({'error': 'Invalid or expired refresh token'}), 401
+
         new_access_token = user.generate_access_token()
         return jsonify({'access_token': new_access_token, 'message': 'Token refreshed successfully'})
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'messages': e.messages}), 400
     except Exception as e:
         current_app.logger.error(f'Token refresh error: {str(e)}')
         return jsonify({'error': 'Token refresh failed'}), 500
-
