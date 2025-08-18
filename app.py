@@ -47,25 +47,26 @@ def create_app(config_name=None):
     # Setup error handlers
     setup_error_handlers(app)
     
-    # Create database tables
-    with app.app_context():
-        # Import models to ensure they're registered
-        try:
-            from models import User, Student, Goal, Objective, TrialLog, Session, SOAPNote
-            print("Models imported successfully")
-        except ImportError as e:
-            print(f"Warning: Could not import all models: {e}")
-        
-        # Create all database tables
-        try:
-            db.create_all()
-            print("Database tables created successfully")
-        except Exception as e:
-            print(f"Error creating database tables: {e}")
-            raise
-        
-        # Initialize default data if needed
-        initialize_default_data()
+    # Create database tables - but only if we're not in the reloader process
+    if not os.environ.get('WERKZEUG_RUN_MAIN'):
+        with app.app_context():
+            # Import models to ensure they're registered
+            try:
+                from models import User, Student, Goal, Objective, TrialLog, Session, SOAPNote
+                print("Models imported successfully")
+            except ImportError as e:
+                print(f"Warning: Could not import all models: {e}")
+            
+            # Create all database tables
+            try:
+                db.create_all()
+                print("Database tables created successfully")
+            except Exception as e:
+                print(f"Error creating database tables: {e}")
+                # Don't raise here, let the app continue
+            
+            # Initialize default data if needed
+            initialize_default_data()
     
     return app
 
@@ -114,5 +115,16 @@ def initialize_default_data():
 app = create_app()
 
 if __name__ == '__main__':
-    # Development server
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    # Development server - disable reloader to avoid SQLite conflicts
+    print("🚀 Starting Student Database v2.0...")
+    print("📍 Server will be available at: http://127.0.0.1:5000")
+    print("📍 API Health check: http://127.0.0.1:5000/api/v1/health")
+    print("⚠️  Debug reloader disabled to avoid SQLite conflicts")
+    
+    app.run(
+        debug=True, 
+        host='127.0.0.1', 
+        port=5000,
+        use_reloader=False  # This fixes the SQLite conflict
+    )
+    
