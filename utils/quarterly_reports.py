@@ -1,5 +1,10 @@
 # utils/quarterly_reports.py - Comprehensive quarterly report generation
-from models import Student, Goal, Objective, TrialLog, Session, QuarterlyReport, db
+from flask import current_app, g
+from models import Student, Goal, Objective, TrialLog, Session, db
+try:
+    from models import QuarterlyReport
+except ImportError:  # pragma: no cover - model may not be implemented yet
+    QuarterlyReport = None
 from datetime import datetime, date, timedelta
 import calendar
 
@@ -66,13 +71,16 @@ class QuarterlyReportGenerator:
         full_report = self._compile_report(report_sections)
         
         # Save report to database
+        if QuarterlyReport is None:
+            raise NotImplementedError("QuarterlyReport model missing")
+
         quarterly_report = QuarterlyReport(
             student_id=student_id,
             quarter=f"{quarter} {year}",
             report_text=full_report,
             generated_by=getattr(g, 'current_user', {}).get('username', 'System')
         )
-        
+
         db.session.add(quarterly_report)
         db.session.commit()
         
@@ -512,14 +520,17 @@ def get_quarterly_report_history(student_id):
     """Get historical quarterly reports for a student."""
     
     try:
+        if QuarterlyReport is None:
+            raise NotImplementedError("QuarterlyReport model missing")
+
         reports = QuarterlyReport.query.filter_by(
             student_id=student_id
         ).order_by(QuarterlyReport.created_at.desc()).all()
-        
+
         return jsonify({
             'reports': [report.to_dict() for report in reports]
         })
-        
+
     except Exception as e:
         current_app.logger.error(f'Error retrieving report history: {str(e)}')
         return jsonify({'error': 'Failed to retrieve report history'}), 500
