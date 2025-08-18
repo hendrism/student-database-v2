@@ -256,7 +256,7 @@ Monthly Breakdown:"""
                 sessions_data[date_key] = []
             sessions_data[date_key].append(log)
         
-        total_trials = sum(log.total_trials_new() for log in trial_logs)
+        total_trials = sum(log.total_trials for log in trial_logs)
         independent_trials = sum(log.independent for log in trial_logs)
         correct_trials = sum(
             log.independent + log.minimal_support + 
@@ -293,7 +293,7 @@ Monthly Breakdown:"""
                 daily_rates[date_key] = {'independent': 0, 'total': 0}
             
             daily_rates[date_key]['independent'] += log.independent
-            daily_rates[date_key]['total'] += log.total_trials_new()
+            daily_rates[date_key]['total'] += log.total_trials
         
         # Calculate independence percentage for each day
         dates = sorted(daily_rates.keys())
@@ -383,7 +383,7 @@ Monthly Breakdown:"""
             return "\nOVERALL SUMMARY\n\nNo trial data available for this reporting period."
         
         # Calculate overall metrics
-        total_trials = sum(log.total_trials_new() for log in trial_logs)
+        total_trials = sum(log.total_trials for log in trial_logs)
         independent_trials = sum(log.independent for log in trial_logs)
         overall_independence = (independent_trials / total_trials * 100) if total_trials > 0 else 0
         
@@ -420,7 +420,7 @@ Key Highlights:
             return recommendations
         
         # Calculate overall progress
-        total_trials = sum(log.total_trials_new() for log in trial_logs)
+        total_trials = sum(log.total_trials for log in trial_logs)
         independent_trials = sum(log.independent for log in trial_logs)
         overall_independence = (independent_trials / total_trials * 100) if total_trials > 0 else 0
         

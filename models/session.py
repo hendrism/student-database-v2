@@ -18,6 +18,8 @@ class Session(db.Model):
     status = db.Column(db.String(50), default='Scheduled')
     location = db.Column(db.String(100))
     notes = db.Column(db.Text)
+    event_type = db.Column(db.String(50), default='Session')
+    plan_notes = db.Column(db.Text)
     
     # Billing information
     billing_code = db.Column(db.String(20))
@@ -52,9 +54,34 @@ class Session(db.Model):
             'status': self.status,
             'location': self.location,
             'notes': self.notes,
+            'event_type': self.event_type,
+            'plan_notes': self.plan_notes,
             'duration_minutes': self.duration_minutes,
             'billing_code': self.billing_code,
             'units': self.units
+        }
+
+    def to_calendar_event(self):
+        """Convert session to calendar event representation."""
+        start_dt = None
+        end_dt = None
+        if self.session_date and self.start_time:
+            start_dt = datetime.combine(self.session_date, self.start_time)
+        if self.session_date and self.end_time:
+            end_dt = datetime.combine(self.session_date, self.end_time)
+
+        return {
+            'id': self.id,
+            'student_id': self.student_id,
+            'title': self.student.display_name if self.student else f'Session {self.id}',
+            'start': start_dt.isoformat() if start_dt else None,
+            'end': end_dt.isoformat() if end_dt else None,
+            'event_type': self.event_type,
+            'session_type': self.session_type,
+            'status': self.status,
+            'location': self.location,
+            'notes': self.notes,
+            'plan_notes': self.plan_notes,
         }
 
 class TrialLog(db.Model):
