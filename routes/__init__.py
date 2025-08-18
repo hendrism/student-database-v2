@@ -2,19 +2,23 @@ from flask import Blueprint
 import datetime
 
 
+# Central blueprint definitions used across route modules
+bp_api = Blueprint('api', __name__)
+bp_auth = Blueprint('auth', __name__)
+
+
 def register_blueprints(app):
     """Register all blueprints with the application."""
 
-    # Import blueprints from their correct locations
-    from .api import api_bp
-    from .auth import auth_bp
+    # Import modules so their routes are attached to the shared blueprints
+    from . import api, auth
     from .students import students_bp
     from .sessions import sessions_bp
     from .soap import soap_bp
 
-    # Register API blueprints
-    app.register_blueprint(api_bp, url_prefix='/api/v1')
-    app.register_blueprint(auth_bp, url_prefix='/auth')
+    # Register shared blueprints
+    app.register_blueprint(bp_api, url_prefix='/api')
+    app.register_blueprint(bp_auth, url_prefix='/auth')
     app.register_blueprint(students_bp)
     app.register_blueprint(sessions_bp)
     app.register_blueprint(soap_bp)
@@ -35,6 +39,15 @@ def register_blueprints(app):
             }, 200
 
         app.register_blueprint(placeholder_bp, url_prefix='/api/reports')
+
+    # Smoke-test endpoints for quick blueprint verification
+    @app.get('/health/api')
+    def api_smoke():
+        return {'status': 'ok'}
+
+    @app.get('/health/auth')
+    def auth_smoke():
+        return {'status': 'ok'}
 
     # Simple health check route
     @app.route('/')
