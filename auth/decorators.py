@@ -1,12 +1,37 @@
 from functools import wraps
-from flask import request, jsonify, g
+from flask import request, jsonify, g, current_app
 from .models import User
+
+# Dev helper: provide a current user when AUTH_DISABLED is on
+def _dev_user():
+    try:
+        # Try to use an existing user from the DB
+        u = User.query.first()
+        if u:
+            return u
+    except Exception:
+        # DB might not be ready; fall back to a stub
+        pass
+    class _Stub:
+        id = 0
+        username = "dev"
+        role = "clinician"
+        active = True
+        def has_permission(self, *_):
+            return True
+    return _Stub()
 
 def require_auth(f):
     """Decorator to require authentication."""
     
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Bypass auth in dev mode
+        if current_app.config.get("AUTH_DISABLED"):
+            if not hasattr(g, 'current_user'):
+                g.current_user = _dev_user()
+            return f(*args, **kwargs)
+
         auth_header = request.headers.get('Authorization')
         
         if not auth_header or not auth_header.startswith('Bearer '):
@@ -29,6 +54,12 @@ def require_permission(permission):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            # Bypass permission checks in dev mode
+            if current_app.config.get("AUTH_DISABLED"):
+                if not hasattr(g, 'current_user'):
+                    g.current_user = _dev_user()
+                return f(*args, **kwargs)
+
             if not hasattr(g, 'current_user'):
                 return jsonify({'error': 'Authentication required'}), 401
             
@@ -46,6 +77,12 @@ def require_role(role):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+            # Bypass role checks in dev mode
+            if current_app.config.get("AUTH_DISABLED"):
+                if not hasattr(g, 'current_user'):
+                    g.current_user = _dev_user()
+                return f(*args, **kwargs)
+
             if not hasattr(g, 'current_user'):
                 return jsonify({'error': 'Authentication required'}), 401
             
