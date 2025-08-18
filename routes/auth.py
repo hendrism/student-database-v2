@@ -159,10 +159,6 @@ def refresh_token():
         data = schema.load(request.json or {})
         rt = data['refresh_token']
 
-        if not hasattr(User, 'verify_refresh_token') or not callable(getattr(User, 'verify_refresh_token')):
-            current_app.logger.error('verify_refresh_token is not implemented on User')
-            return jsonify({'error': 'Refresh token verification not implemented'}), 501
-
         user = User.verify_refresh_token(rt)
         if not user:
             return jsonify({'error': 'Invalid or expired refresh token'}), 401
