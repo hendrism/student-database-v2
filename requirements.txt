@@ -45,5 +45,7 @@ pytest-cov==4.1.0
 
 # Data Processing
 pandas==2.1.1
+# numpy is pinned to <2.0 due to potential incompatibilities with some libraries (e.g., pandas 2.x)
+numpy<2.0
 matplotlib==3.7.2
 seaborn==0.12.2
