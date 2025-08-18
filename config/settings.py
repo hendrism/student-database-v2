@@ -72,6 +72,11 @@ class Config:
         backup_path = instance_path / 'backups'
         backup_path.mkdir(exist_ok=True)
 
+        if getattr(app.config, "AUTH_DISABLED", False):
+            print("⚠️  AUTH_DISABLED is ON - auth checks are bypassed (dev only)")
+        else:
+            print("🔒 AUTH_DISABLED is OFF - normal auth required")
+
 class DevelopmentConfig(Config):
     """Development configuration."""
     
