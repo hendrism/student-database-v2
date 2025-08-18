@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from marshmallow import Schema, fields, ValidationError, validate
+from marshmallow import Schema, fields, ValidationError, validate, pre_load, INCLUDE
 from extensions import db
 from models import Student
 from auth.decorators import require_auth, require_permission
@@ -15,6 +15,18 @@ class StudentCreateSchema(Schema):
         'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'
     ]))
     monthly_services = fields.Int(validate=validate.Range(min=1, max=20))
+    date_of_birth = fields.Date(allow_none=True, data_key="dob")
+
+    class Meta:
+        unknown = INCLUDE  # accept extra fields without failing validation
+
+    @pre_load
+    def alias_dob(self, data, **kwargs):
+        # Allow either 'dob' or 'date_of_birth' from clients
+        if isinstance(data, dict):
+            if "dob" in data and "date_of_birth" not in data:
+                data["date_of_birth"] = data["dob"]
+        return data
 
 @students_bp.route('/', methods=['GET'])
 @require_auth
