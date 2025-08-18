@@ -1,12 +1,11 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import request, jsonify, current_app
 from marshmallow import Schema, fields, ValidationError, validate
 from datetime import datetime
 from extensions import db
 from auth.models import User
 import re
 
-# Create the auth blueprint
-auth_bp = Blueprint('auth', __name__)
+from . import bp_auth
 
 # Validation schemas
 class LoginSchema(Schema):
@@ -44,7 +43,13 @@ def validate_password_strength(password):
         return False, "Password must contain at least one number"
     return True, "Password is valid"
 
-@auth_bp.route('/login', methods=['POST'])
+
+@bp_auth.route('/health', methods=['GET'])
+def auth_health_check():
+    """Simple auth blueprint health check."""
+    return {'status': 'ok'}
+
+@bp_auth.route('/login', methods=['POST'])
 def login():
     """User login endpoint."""
     try:
@@ -85,7 +90,7 @@ def login():
         current_app.logger.error(f'Login error: {str(e)}')
         return jsonify({'error': 'Login failed'}), 500
 
-@auth_bp.route('/register', methods=['POST'])
+@bp_auth.route('/register', methods=['POST'])
 def register():
     """User registration endpoint."""
     try:
@@ -122,7 +127,7 @@ def register():
         current_app.logger.error(f'Registration error: {str(e)}')
         return jsonify({'error': 'Registration failed'}), 500
 
-@auth_bp.route('/profile', methods=['GET'])
+@bp_auth.route('/profile', methods=['GET'])
 def get_profile():
     """Get current user profile."""
     try:
@@ -137,7 +142,7 @@ def get_profile():
         current_app.logger.error(f'Profile retrieval error: {str(e)}')
         return jsonify({'error': 'Failed to retrieve profile'}), 500
 
-@auth_bp.route('/logout', methods=['POST'])
+@bp_auth.route('/logout', methods=['POST'])
 def logout():
     """User logout endpoint."""
     try:
@@ -151,7 +156,7 @@ def logout():
         current_app.logger.error(f'Logout error: {str(e)}')
         return jsonify({'error': 'Logout failed'}), 500
 
-@auth_bp.route('/refresh', methods=['POST'])
+@bp_auth.route('/refresh', methods=['POST'])
 def refresh_token():
     """Refresh access token using refresh token."""
     try:
