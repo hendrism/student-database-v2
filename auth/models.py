@@ -1,12 +1,10 @@
 from datetime import datetime, timedelta
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-import secrets
 import jwt
 from flask import current_app
 
-# Import db from models
-from models import db
+# Import db from extensions
+from extensions import db
 
 class User(db.Model):
     """User model for authentication and authorization."""

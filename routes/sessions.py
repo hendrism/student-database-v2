@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
-from marshmallow import Schema, fields, ValidationError
-from models import db, Session, Student
+from marshmallow import Schema, fields, ValidationError, validate
+from extensions import db
+from models import Session, Student
 from auth.decorators import require_auth
 from datetime import datetime, date
 

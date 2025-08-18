@@ -10,7 +10,7 @@ from flask_cors import CORS
 
 # Import your custom modules
 from config.settings import config
-from models import db
+from extensions import db
 
 def create_app(config_name=None):
     """Application factory pattern for better organization."""

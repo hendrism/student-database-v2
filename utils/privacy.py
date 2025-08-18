@@ -3,7 +3,8 @@ import uuid
 import re
 from datetime import datetime, date, timedelta
 from typing import Dict, List, Optional, Tuple
-from models import db, Student, SOAPNote, TrialLog
+from extensions import db
+from models import Student, SOAPNote, TrialLog
 import logging
 
 logger = logging.getLogger(__name__)

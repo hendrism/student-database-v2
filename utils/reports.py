@@ -1,5 +1,6 @@
 from datetime import datetime, date, timedelta
-from models import db, Student, Goal, Objective, Session, TrialLog, SOAPNote
+from extensions import db
+from models import Student, Goal, Objective, Session, TrialLog, SOAPNote
 import io
 import base64
 from typing import Dict, List, Optional, Tuple

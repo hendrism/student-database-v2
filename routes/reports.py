@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response
 from auth.decorators import token_required, role_required
-from models import db, Student, Goal, Objective, Session, TrialLog, SOAPNote
+from extensions import db
+from models import Student, Goal, Objective, Session, TrialLog, SOAPNote
 from utils.validators import validate_date_range
 from datetime import datetime, date, timedelta
 import logging

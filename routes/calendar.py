@@ -1,8 +1,9 @@
 # routes/calendar.py - FullCalendar API integration
-from flask import Blueprint, request, jsonify, current_app, g
+from flask import Blueprint, request, jsonify, current_app
 from marshmallow import Schema, fields, ValidationError, validate
 from datetime import datetime, date, time, timedelta
-from models import db, Session, Student
+from extensions import db
+from models import Session, Student
 from auth.decorators import require_auth, require_permission
 
 calendar_bp = Blueprint('calendar', __name__)
@@ -15,10 +16,10 @@ class EventCreateSchema(Schema):
     end_time = fields.Time(required=True)
     event_type = fields.Str(validate=validate.OneOf([
         'Session', 'Meeting', 'Assessment', 'Reminder', 'Other'
-    ]), missing='Session')
+    ]), load_default='Session')
     session_type = fields.Str(validate=validate.OneOf([
         'Individual', 'Group', 'Assessment', 'Consultation'
-    ]), missing='Individual')
+    ]), load_default='Individual')
     location = fields.Str(validate=validate.Length(max=100), allow_none=True)
     notes = fields.Str(validate=validate.Length(max=1000), allow_none=True)
     plan_notes = fields.Str(validate=validate.Length(max=1000), allow_none=True)
