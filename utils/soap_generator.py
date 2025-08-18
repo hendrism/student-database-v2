@@ -1,7 +1,10 @@
 # utils/soap_generator.py - Smart SOAP note generation
-from models import Student, Activity, TrialLog, Session
+from flask import current_app
+from models import Student, TrialLog, Session
 import re
 from datetime import datetime, date
+
+# TODO: Add Activity model import if/when the model is implemented
 
 class SOAPGenerator:
     """Advanced SOAP note generation with smart templates and pronoun handling."""

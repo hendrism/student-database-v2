@@ -1,5 +1,5 @@
 from flask import Blueprint
-from datetime import datetime
+import datetime
 
 
 def register_blueprints(app):
@@ -50,7 +50,7 @@ def register_blueprints(app):
         """Health check endpoint."""
         return {
             'status': 'healthy',
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.datetime.utcnow().isoformat(),
             'version': '2.0.0'
         }
 
