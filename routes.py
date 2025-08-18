@@ -1,6 +1,7 @@
 """Basic API routes for Student Database v2.0."""
 
 from flask import Blueprint, jsonify, request
+from datetime import datetime
 from models import db, User, Student
 
 # Create blueprints
@@ -16,11 +17,20 @@ def register_blueprints(app):
 @api_bp.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint."""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': db.func.now(),
-        'version': '2.0.0'
-    })
+    try:
+        # Test database connection with a simple query
+        db.session.execute(db.text('SELECT 1'))
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.utcnow().isoformat(),
+            'version': '2.0.0'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': 'Database connection failed',
+            'timestamp': datetime.utcnow().isoformat()
+        }), 503
 
 # Basic authentication endpoint
 @auth_bp.route('/login', methods=['POST'])
@@ -117,3 +127,4 @@ def delete_student(student_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+    
