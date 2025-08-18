@@ -6,6 +6,7 @@ from pathlib import Path
 from flask import Flask
 from flask_migrate import Migrate
 from flask_cors import CORS
+from dotenv import load_dotenv
 
 # Import your custom modules
 from config.settings import config
@@ -13,7 +14,9 @@ from extensions import db
 
 def create_app(config_name=None):
     """Application factory pattern for better organization."""
-    
+
+    # Load environment variables from .env if present
+    load_dotenv()
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'development')
     
@@ -27,6 +30,18 @@ def create_app(config_name=None):
     # Load configuration
     app.config.from_object(config.get(config_name, config['default']))
     config[config_name].init_app(app)
+
+    # === AUTH TOGGLE: read env LAST and set config ===
+    raw_flag = os.getenv("AUTH_DISABLED")
+    flag = str(raw_flag).lower() in ("1", "true", "yes", "on")
+    app.config["AUTH_DISABLED"] = flag
+
+    # Helpful logs
+    print("ENV AUTH_DISABLED =", raw_flag)
+    if flag:
+        print("⚠️  AUTH_DISABLED is ON - auth checks are bypassed (dev only)")
+    else:
+        print("🔒 AUTH_DISABLED is OFF - normal auth required")
     
     # Initialize extensions
     db.init_app(app)
