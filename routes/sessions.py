@@ -55,6 +55,7 @@ def create_session():
     except ValidationError as e:
         return jsonify({'error': 'Validation failed', 'messages': e.messages}), 400
 
+
 @sessions_bp.route('/<int:session_id>', methods=['PUT'])
 @require_auth
 def update_session(session_id):
@@ -68,3 +69,13 @@ def update_session(session_id):
     
     db.session.commit()
     return jsonify(session.to_dict())
+
+
+# Delete a session
+@sessions_bp.route('/<int:session_id>', methods=['DELETE'])
+@require_auth
+def delete_session(session_id):
+    session = Session.query.get_or_404(session_id)
+    db.session.delete(session)
+    db.session.commit()
+    return jsonify({'message': 'Session deleted'}), 200

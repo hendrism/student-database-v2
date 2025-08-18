@@ -13,15 +13,16 @@ def health_check():
         db.session.execute(text('SELECT 1'))
         return jsonify({
             'status': 'healthy',
-            'timestamp': datetime.utcnow().isoformat(),
-            'version': '2.0.0'
-        })
+            'timestamp': datetime.utcnow().replace(microsecond=0).isoformat(),
+            'version': '2.0.0',
+            'database': 'ok'
+        }), 200
     except Exception as e:
         current_app.logger.error(f'Health check failed: {str(e)}')
         return jsonify({
             'status': 'unhealthy',
             'error': 'Database connection failed',
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.utcnow().replace(microsecond=0).isoformat()
         }), 503
 
 @bp_api.route('/v1/health', methods=['GET'])

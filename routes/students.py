@@ -54,6 +54,9 @@ def create_student():
     schema = StudentCreateSchema()
     try:
         data = schema.load(request.json)
+        # Map schema's date_of_birth field to model's dob
+        if "date_of_birth" in data:
+            data["dob"] = data.pop("date_of_birth")
         student = Student(**data)
         db.session.add(student)
         db.session.commit()
