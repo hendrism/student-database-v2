@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
-from models import db, Student, Goal, Objective, TrialLog, Session
+from extensions import db
+from models import Student, Goal, Objective, TrialLog, Session
+from sqlalchemy import text
 
 api_bp = Blueprint('api', __name__)
 
@@ -10,7 +12,7 @@ def health_check():
     """Health check endpoint."""
     try:
         # Check database connection
-        db.session.execute('SELECT 1')
+        db.session.execute(text('SELECT 1'))
         return jsonify({
             'status': 'healthy',
             'timestamp': datetime.utcnow().isoformat(),

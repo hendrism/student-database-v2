@@ -28,7 +28,7 @@ def test_database_setup():
         from config.settings import config
         print("✅ Config imported successfully")
         
-        from models import db
+        from extensions import db
         print("✅ Database models imported successfully")
         
     except ImportError as e:

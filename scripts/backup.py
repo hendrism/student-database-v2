@@ -97,7 +97,7 @@ def restore_backup(backup_file: str, restore_mode: str = 'replace'):
                 logger.error(f" Backup verification failed: {verify_result['error']}")
                 return False
             elif verify_result['status'] == 'warning':
-                logger.warning(f"  Backup has issues but may still be restorable")
+                logger.warning(f"  Backup has issues but may still be restorable")
                 for issue in verify_result['integrity_info'].get('consistency_issues', []):
                     logger.warning(f"  - {issue}")
                 
@@ -108,7 +108,7 @@ def restore_backup(backup_file: str, restore_mode: str = 'replace'):
             
             # Confirm restore operation
             if restore_mode == 'replace':
-                logger.warning("  REPLACE mode will delete all existing data!")
+                logger.warning("  REPLACE mode will delete all existing data!")
                 response = input("Are you sure you want to continue? Type 'YES' to confirm: ")
                 if response != 'YES':
                     logger.info("Restore cancelled by user")
@@ -218,7 +218,7 @@ def verify_backup(backup_file: str):
             return True
         elif result['status'] == 'warning':
             info = result['integrity_info']
-            logger.warning(f"  Backup verification passed with warnings:")
+            logger.warning(f"  Backup verification passed with warnings:")
             logger.warning(f"  Structure valid: {info['structure_valid']}")
             logger.warning(f"  Metadata complete: {info['metadata_complete']}")
             
