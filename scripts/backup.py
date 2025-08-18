@@ -13,7 +13,6 @@ Usage:
     python scripts/backup.py cleanup --keep-days 30
 """
 
-import os
 import sys
 import argparse
 from datetime import datetime, date, timedelta
@@ -68,7 +67,7 @@ def create_backup(backup_type: str, since_date: str = None, compress: bool = Tru
             
             if result['status'] == 'success':
                 info = result['backup_info']
-                logger.info(f" Backup created successfully:")
+                logger.info(" Backup created successfully:")
                 logger.info(f"  File: {info['file_path']}")
                 logger.info(f"  Size: {info['file_size']:,} bytes")
                 logger.info(f"  Records: {info['records_backed_up']:,}")
@@ -97,7 +96,7 @@ def restore_backup(backup_file: str, restore_mode: str = 'replace'):
                 logger.error(f" Backup verification failed: {verify_result['error']}")
                 return False
             elif verify_result['status'] == 'warning':
-                logger.warning(f"  Backup has issues but may still be restorable")
+                logger.warning("  Backup has issues but may still be restorable")
                 for issue in verify_result['integrity_info'].get('consistency_issues', []):
                     logger.warning(f"  - {issue}")
                 
@@ -119,7 +118,7 @@ def restore_backup(backup_file: str, restore_mode: str = 'replace'):
             
             if result['status'] == 'success':
                 info = result['restore_info']
-                logger.info(f" Restore completed successfully:")
+                logger.info(" Restore completed successfully:")
                 logger.info(f"  Mode: {info['restore_mode']}")
                 logger.info(f"  Records restored: {info['total_restored']:,}")
                 for table, count in info['restored_counts'].items():
@@ -175,7 +174,7 @@ def cleanup_backups(keep_days: int = 30, keep_minimum: int = 5):
         
         if result['status'] == 'success':
             info = result['cleanup_info']
-            logger.info(f" Cleanup completed:")
+            logger.info(" Cleanup completed:")
             logger.info(f"  Files deleted: {info['files_deleted']}")
             logger.info(f"  Space freed: {info['space_freed_mb']} MB")
             logger.info(f"  Files kept: {info['files_kept']}")
@@ -204,7 +203,7 @@ def verify_backup(backup_file: str):
         
         if result['status'] == 'success':
             info = result['integrity_info']
-            logger.info(f" Backup verification passed:")
+            logger.info(" Backup verification passed:")
             logger.info(f"  File: {info['file_path']}")
             logger.info(f"  Size: {info['file_size']:,} bytes")
             logger.info(f"  Type: {info['backup_type']}")
@@ -218,7 +217,7 @@ def verify_backup(backup_file: str):
             return True
         elif result['status'] == 'warning':
             info = result['integrity_info']
-            logger.warning(f"  Backup verification passed with warnings:")
+            logger.warning("  Backup verification passed with warnings:")
             logger.warning(f"  Structure valid: {info['structure_valid']}")
             logger.warning(f"  Metadata complete: {info['metadata_complete']}")
             
@@ -284,7 +283,7 @@ Examples:
                                help='Restore mode (replace existing data or skip duplicates)')
     
     # List backups command
-    list_parser = subparsers.add_parser('list', help='List available backups')
+    subparsers.add_parser('list', help='List available backups')
     
     # Cleanup command
     cleanup_parser = subparsers.add_parser('cleanup', help='Clean up old backups')

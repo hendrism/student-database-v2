@@ -2,9 +2,8 @@
 
 import os
 import logging
-from datetime import datetime, timedelta
 from pathlib import Path
-from flask import Flask, request, g
+from flask import Flask
 from flask_migrate import Migrate
 from flask_cors import CORS
 
@@ -31,7 +30,7 @@ def create_app(config_name=None):
     
     # Initialize extensions
     db.init_app(app)
-    migrate = Migrate(app, db)
+    Migrate(app, db)
     CORS(app)  # Enable CORS for frontend
     
     # Register blueprints (after ensuring they exist)
@@ -52,7 +51,7 @@ def create_app(config_name=None):
         with app.app_context():
             # Import models to ensure they're registered
             try:
-                from models import User, Student, Goal, Objective, TrialLog, Session, SOAPNote
+                import models  # noqa: F401
                 print("Models imported successfully")
             except ImportError as e:
                 print(f"Warning: Could not import all models: {e}")

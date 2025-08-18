@@ -1,4 +1,4 @@
-from flask import request, jsonify, current_app
+from flask import jsonify, current_app
 from datetime import datetime
 from extensions import db
 from models import Student, Goal
@@ -29,8 +29,8 @@ def health_check():
 def get_dashboard_analytics():
     """Get dashboard analytics data."""
     try:
-        total_students = Student.query.filter(Student.active == True).count()
-        total_goals = Goal.query.filter(Goal.active == True).count()
+        total_students = Student.query.filter(Student.active.is_(True)).count()
+        total_goals = Goal.query.filter(Goal.active.is_(True)).count()
 
         return jsonify({
             'stats': {

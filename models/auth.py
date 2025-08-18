@@ -5,5 +5,4 @@ to avoid duplication. Import User from auth.models instead.
 """
 
 # Import User from the auth package to maintain compatibility
-from auth.models import User
 

@@ -2,7 +2,7 @@ import hashlib
 import uuid
 import re
 from datetime import datetime, date, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from extensions import db
 from models import Student, SOAPNote, TrialLog
 import logging
@@ -23,11 +23,11 @@ class PrivacyManager:
             if student.anonymized:
                 return {'status': 'already_anonymized', 'student_id': student_id}
             
-            # Store original data for audit trail
-            original_data = {
+            # Store original data for audit trail (could be logged or stored if needed)
+            _ = {
                 'first_name': student.first_name,
                 'last_name': student.last_name,
-                'preferred_name': student.preferred_name
+                'preferred_name': student.preferred_name,
             }
             
             # Anonymize student record
@@ -111,8 +111,8 @@ class PrivacyManager:
         # Find students with old data
         old_students = Student.query.filter(
             Student.created_at < cutoff_date,
-            Student.active == False,
-            Student.anonymized == False
+            Student.active.is_(False),
+            Student.anonymized.is_(False)
         ).all()
         
         retention_violations = []
@@ -141,8 +141,8 @@ class PrivacyManager:
             # Find candidates for anonymization
             candidates = Student.query.filter(
                 Student.created_at < cutoff_date,
-                Student.active == False,
-                Student.anonymized == False
+                Student.active.is_(False),
+                Student.anonymized.is_(False)
             ).all()
             
             if dry_run:
@@ -245,12 +245,12 @@ class PrivacyManager:
         try:
             # Data inventory
             total_students = Student.query.count()
-            active_students = Student.query.filter(Student.active == True).count()
-            anonymized_students = Student.query.filter(Student.anonymized == True).count()
-            
+            active_students = Student.query.filter(Student.active.is_(True)).count()
+            anonymized_students = Student.query.filter(Student.anonymized.is_(True)).count()
+
             # SOAP notes privacy status
             total_soap_notes = SOAPNote.query.count()
-            anonymized_soap_notes = SOAPNote.query.filter(SOAPNote.anonymized == True).count()
+            anonymized_soap_notes = SOAPNote.query.filter(SOAPNote.anonymized.is_(True)).count()
             
             # Retention policy compliance
             retention_violations = PrivacyManager.check_retention_policy()
@@ -258,7 +258,10 @@ class PrivacyManager:
             # Data age analysis
             oldest_active_student = db.session.query(
                 db.func.min(Student.created_at)
-            ).filter(Student.active == True, Student.anonymized == False).scalar()
+            ).filter(
+                Student.active.is_(True),
+                Student.anonymized.is_(False)
+            ).scalar()
             
             # Privacy metrics
             anonymization_rate = round((anonymized_students / total_students) * 100, 1) if total_students > 0 else 0

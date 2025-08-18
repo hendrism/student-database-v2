@@ -15,7 +15,7 @@ except ImportError:
 
 try:
     import matplotlib.pyplot as plt
-    import seaborn as sns
+    import seaborn as sns  # noqa: F401
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
@@ -27,7 +27,7 @@ def generate_progress_report(student_id: int, start_date: date, end_date: date) 
         raise ValueError(f"Student with ID {student_id} not found")
     
     # Get all relevant data
-    goals = Goal.query.filter(Goal.student_id == student_id, Goal.active == True).all()
+    goals = Goal.query.filter(Goal.student_id == student_id, Goal.active.is_(True)).all()
     trial_logs = TrialLog.query.filter(
         TrialLog.student_id == student_id,
         TrialLog.session_date.between(start_date, end_date)
@@ -194,17 +194,17 @@ def generate_analytics_data(date_range: Tuple[date, date]) -> Dict:
     start_date, end_date = date_range
     
     # Student analytics
-    total_students = Student.query.filter(Student.active == True).count()
+    total_students = Student.query.filter(Student.active.is_(True)).count()
     students_with_data = db.session.query(Student.id).join(TrialLog).filter(
         TrialLog.session_date.between(start_date, end_date),
-        Student.active == True
+        Student.active.is_(True)
     ).distinct().count()
     
     # Goal analytics
-    active_goals = Goal.query.filter(Goal.active == True).count()
+    active_goals = Goal.query.filter(Goal.active.is_(True)).count()
     goals_with_progress = db.session.query(Goal.id).join(Objective).join(TrialLog).filter(
         TrialLog.session_date.between(start_date, end_date),
-        Goal.active == True
+        Goal.active.is_(True)
     ).distinct().count()
     
     # Session analytics
@@ -301,7 +301,7 @@ def generate_goal_mastery_report(goal_id: int, date_range: Tuple[date, date]) ->
         raise ValueError(f"Goal with ID {goal_id} not found")
     
     # Get all objectives for this goal
-    objectives = Objective.query.filter(Objective.goal_id == goal_id, Objective.active == True).all()
+    objectives = Objective.query.filter(Objective.goal_id == goal_id, Objective.active.is_(True)).all()
     
     objective_progress = []
     for objective in objectives:
@@ -425,14 +425,14 @@ def calculate_system_health_metrics() -> Dict:
     thirty_days_ago = date.today() - timedelta(days=30)
     
     # Data completeness metrics
-    total_students = Student.query.filter(Student.active == True).count()
+    total_students = Student.query.filter(Student.active.is_(True)).count()
     students_with_goals = db.session.query(Student.id).join(Goal).filter(
-        Student.active == True,
-        Goal.active == True
+        Student.active.is_(True),
+        Goal.active.is_(True)
     ).distinct().count()
     
     students_with_recent_data = db.session.query(Student.id).join(TrialLog).filter(
-        Student.active == True,
+        Student.active.is_(True),
         TrialLog.session_date >= thirty_days_ago
     ).distinct().count()
     

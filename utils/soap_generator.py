@@ -1,8 +1,6 @@
 # utils/soap_generator.py - Smart SOAP note generation
-from flask import current_app
 from models import Student, TrialLog, Session
-import re
-from datetime import datetime, date
+from datetime import datetime
 
 # TODO: Add Activity model import if/when the model is implemented
 
@@ -173,7 +171,6 @@ class SOAPGenerator:
     def _generate_objective(self, student, trial_logs, session_data):
         """Generate objective section with trial data and activities."""
         
-        pronouns = self._get_pronouns(student.pronouns)
         objective_parts = []
         
         # Process each goal area
@@ -222,11 +219,8 @@ class SOAPGenerator:
     def _generate_assessment(self, student, trial_logs, session_data):
         """Generate assessment section with progress analysis."""
         
-        pronouns = self._get_pronouns(student.pronouns)
-        
         # Calculate overall progress
         if trial_logs:
-            overall_accuracy = self._calculate_accuracy(trial_logs)
             independence_rate = self._calculate_independence_rate(trial_logs) or 0
 
             if independence_rate >= 80:

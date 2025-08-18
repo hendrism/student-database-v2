@@ -1,11 +1,11 @@
 # utils/quarterly_reports.py - Comprehensive quarterly report generation
-from flask import current_app, g
-from models import Student, Goal, Objective, TrialLog, Session, db
+from flask import g
+from models import Student, TrialLog, Session, db
 try:
     from models import QuarterlyReport
 except ImportError:  # pragma: no cover - model may not be implemented yet
     QuarterlyReport = None
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 import calendar
 
 class QuarterlyReportGenerator:
@@ -147,7 +147,7 @@ Monthly Breakdown:"""
             attendance_section += f"\n  • {month}: {count} sessions"
         
         if attendance_rate < 85:
-            attendance_section += f"\n\nNote: Attendance rate is below target (85%). Consider makeup sessions or schedule adjustments."
+            attendance_section += "\n\nNote: Attendance rate is below target (85%). Consider makeup sessions or schedule adjustments."
         
         return attendance_section
 
@@ -301,9 +301,9 @@ Monthly Breakdown:"""
             return "Insufficient data for trend analysis"
         
         rates = []
-        for date in dates:
-            if daily_rates[date]['total'] > 0:
-                rate = daily_rates[date]['independent'] / daily_rates[date]['total'] * 100
+        for current_date in dates:
+            if daily_rates[current_date]['total'] > 0:
+                rate = daily_rates[current_date]['independent'] / daily_rates[current_date]['total'] * 100
                 rates.append(rate)
         
         if len(rates) < 3:
@@ -429,16 +429,16 @@ Key Highlights:
         elif overall_independence >= 60:
             recommendations += f"Continue current intervention with focus on independence. {student.first_name} is making good progress."
         elif overall_independence >= 40:
-            recommendations += f"Maintain current frequency of services. Consider strategy modifications to improve independence."
+            recommendations += "Maintain current frequency of services. Consider strategy modifications to improve independence."
         else:
-            recommendations += f"Consider intervention modifications or increased frequency of services."
+            recommendations += "Consider intervention modifications or increased frequency of services."
         
         # Add specific recommendations from goals data
         for goal_data in goals_data.values():
             if goal_data.get('recommendations'):
                 recommendations += f"\n• {goal_data['recommendations']}"
         
-        recommendations += f"\n\nRecommended continuation of speech-language therapy services at current frequency."
+        recommendations += "\n\nRecommended continuation of speech-language therapy services at current frequency."
         
         return recommendations
 
@@ -480,9 +480,9 @@ Key Highlights:
             year = date.today().year
             
         return [
-            {'code': f'Q1', 'name': f'Q1 {year}', 'months': 'Jan-Mar'},
-            {'code': f'Q2', 'name': f'Q2 {year}', 'months': 'Apr-Jun'},
-            {'code': f'Q3', 'name': f'Q3 {year}', 'months': 'Jul-Sep'},
-            {'code': f'Q4', 'name': f'Q4 {year}', 'months': 'Oct-Dec'}
+            {'code': 'Q1', 'name': f'Q1 {year}', 'months': 'Jan-Mar'},
+            {'code': 'Q2', 'name': f'Q2 {year}', 'months': 'Apr-Jun'},
+            {'code': 'Q3', 'name': f'Q3 {year}', 'months': 'Jul-Sep'},
+            {'code': 'Q4', 'name': f'Q4 {year}', 'months': 'Oct-Dec'}
         ]
 
