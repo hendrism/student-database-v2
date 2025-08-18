@@ -55,14 +55,19 @@ def import_factory():
         print(f"❌ create_app failed: {e}")
         return None
 
-def sqlalchemy_count_ok() -> Tuple[bool, int]:
+def sqlalchemy_count_ok() -> tuple[bool, int]:
     print("\n== SQLAlchemy instance check ==")
-    ok, out = run(["git", "grep", "-n", "SQLAlchemy("], check=False)
+    # Exclude this script and common virtualenv dirs
+    ok, out = run(
+        ["git","grep","-n","SQLAlchemy(","--",
+         ":!check_branch.py",":!.venv",":!venv",":!env",":!**/.git/*"],
+        check=False
+    )
     lines = (out or "").splitlines()
     count = len([l for l in lines if l.strip()])
     for l in lines:
         print(l)
-    print(f"Found {count} SQLAlchemy() calls")
+    print(f"Found {count} SQLAlchemy() calls (excluding helper files)")
     return (count == 1, count)
 
 def stray_files_ok() -> bool:
@@ -94,7 +99,7 @@ def health_smoke_ok(app) -> bool:
         return False
     print("\n== Health endpoint check ==")
     ok_all = True
-    paths = ["/health", "/health/api", "/health/auth"]
+    paths = ["/health", "/api/v1/health", "/auth/health"]
     with app.test_client() as c:
         for p in paths:
             try:
