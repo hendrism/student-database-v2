@@ -1,4 +1,3 @@
-# config/settings.py - FIXED VERSION
 import os
 import secrets
 from datetime import timedelta
@@ -31,6 +30,11 @@ class Config:
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or secrets.token_hex(32)
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+    
+    # Dev/auth toggle (handy during local development)
+    # When set, auth decorators can bypass verification to speed up UI/dev work.
+    # Enable with: export AUTH_DISABLED=1
+    AUTH_DISABLED = os.environ.get('AUTH_DISABLED', '0') in ("1", "true", "True", "yes", "on")
     
     # Privacy settings
     DATA_RETENTION_DAYS = int(os.environ.get('DATA_RETENTION_DAYS', 2555))  # 7 years
