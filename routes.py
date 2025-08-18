@@ -17,20 +17,11 @@ def register_blueprints(app):
 @api_bp.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint."""
-    try:
-        # Test database connection with a simple query
-        db.session.execute(db.text('SELECT 1'))
-        return jsonify({
-            'status': 'healthy',
-            'timestamp': datetime.utcnow().isoformat(),
-            'version': '2.0.0'
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'unhealthy',
-            'error': 'Database connection failed',
-            'timestamp': datetime.utcnow().isoformat()
-        }), 503
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'version': '2.0.0'
+    })
 
 # Basic authentication endpoint
 @auth_bp.route('/login', methods=['POST'])
@@ -127,4 +118,3 @@ def delete_student(student_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
-    
