@@ -1,3 +1,5 @@
+"""Flask application entry point for the Student Database v2.0."""
+
 import os
 import logging
 from datetime import datetime, timedelta
@@ -9,7 +11,6 @@ from flask_cors import CORS
 # Import your custom modules
 from config.settings import config
 from models import db
-from routes import register_blueprints
 
 def create_app(config_name=None):
     """Application factory pattern for better organization."""
@@ -18,6 +19,11 @@ def create_app(config_name=None):
         config_name = os.environ.get('FLASK_ENV', 'development')
     
     app = Flask(__name__, instance_relative_config=True)
+    
+    # Ensure instance directory exists FIRST
+    instance_path = Path(app.instance_path)
+    instance_path.mkdir(exist_ok=True)
+    print(f"Instance path: {instance_path}")
     
     # Load configuration
     app.config.from_object(config.get(config_name, config['default']))
@@ -28,8 +34,12 @@ def create_app(config_name=None):
     migrate = Migrate(app, db)
     CORS(app)  # Enable CORS for frontend
     
-    # Register blueprints
-    register_blueprints(app)
+    # Register blueprints (after ensuring they exist)
+    try:
+        from routes import register_blueprints
+        register_blueprints(app)
+    except ImportError:
+        print("Warning: routes module not found, skipping blueprint registration")
     
     # Setup logging
     setup_logging(app)
@@ -37,17 +47,22 @@ def create_app(config_name=None):
     # Setup error handlers
     setup_error_handlers(app)
     
-    # Create database tables and instance folder
+    # Create database tables
     with app.app_context():
-        # Ensure instance directory exists
-        instance_path = Path(app.instance_path)
-        instance_path.mkdir(exist_ok=True)
-        
-        # Import models to create tables
-        from models import User, Student, Goal, Objective, TrialLog, Session, SOAPNote
+        # Import models to ensure they're registered
+        try:
+            from models import User, Student, Goal, Objective, TrialLog, Session, SOAPNote
+            print("Models imported successfully")
+        except ImportError as e:
+            print(f"Warning: Could not import all models: {e}")
         
         # Create all database tables
-        db.create_all()
+        try:
+            db.create_all()
+            print("Database tables created successfully")
+        except Exception as e:
+            print(f"Error creating database tables: {e}")
+            raise
         
         # Initialize default data if needed
         initialize_default_data()
@@ -87,11 +102,13 @@ def setup_error_handlers(app):
 def initialize_default_data():
     """Initialize default data if database is empty."""
     # Check if we need to create default data
-    from models import User
-    if User.query.first() is not None:
-        return
-    
-    print("Database is empty, run scripts/create_admin.py to create admin user")
+    try:
+        from models import User
+        if User.query.first() is not None:
+            return
+        print("Database is empty, run scripts/create_admin.py to create admin user")
+    except Exception as e:
+        print(f"Could not check for existing users: {e}")
 
 # Create app instance
 app = create_app()
