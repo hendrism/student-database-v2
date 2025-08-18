@@ -24,6 +24,11 @@ def health_check():
             'timestamp': datetime.utcnow().isoformat()
         }), 503
 
+@bp_api.route('/api/v1/health', methods=['GET'])
+def health_check_v1():
+    """Alias for /api/health for backward compatibility."""
+    return health_check()
+
 # Simple dashboard analytics
 @bp_api.route('/analytics/dashboard', methods=['GET'])
 def get_dashboard_analytics():
