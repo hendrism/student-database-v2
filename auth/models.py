@@ -96,71 +96,73 @@ class User(db.Model):
         )
     
     @staticmethod
-    def verify_token(token, token_type='access'):
-        """Verify JWT token, enforce type and password change invalidation."""
+    def verify_token(token: str) -> "User | None":
+        """Decode an access token and return the associated active user.
+
+        The token's signature and expiration are validated using the
+        application's ``SECRET_KEY``. Only tokens explicitly marked as access
+        tokens are accepted. If the token is invalid, expired or the user is
+        inactive, ``None`` is returned.
+        """
         try:
             payload = jwt.decode(
                 token,
-                current_app.config['SECRET_KEY'],
-                algorithms=['HS256']
+                current_app.config["SECRET_KEY"],
+                algorithms=["HS256"],
             )
-
-            # Enforce expected token type
-            if payload.get('type') != token_type:
-                return None
-
-            user = User.query.get(payload.get('user_id'))
-            if not user or not user.active:
-                return None
-
-            # Invalidate tokens issued before the most recent password change
-            iat = payload.get('iat')
-            if iat is not None and user.password_changed_at is not None:
-                # jwt stores iat as a timestamp (seconds). Ensure dt comparison.
-                if isinstance(iat, (int, float)):
-                    issued_at = datetime.utcfromtimestamp(iat)
-                else:
-                    # some jwt libs may return a datetime already
-                    issued_at = iat
-                if issued_at < user.password_changed_at:
-                    return None
-
-            return user
-
         except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, KeyError, TypeError):
             return None
+
+        if payload.get("type") != "access":
+            return None
+
+        user_id = payload.get("user_id")
+        user = User.query.get(user_id) if user_id is not None else None
+        if not user or not user.active:
+            return None
+
+        # Invalidate tokens issued before the most recent password change
+        iat = payload.get("iat")
+        if iat is not None and user.password_changed_at is not None:
+            if isinstance(iat, (int, float)):
+                issued_at = datetime.utcfromtimestamp(iat)
+            else:
+                issued_at = iat
+            if issued_at < user.password_changed_at:
+                return None
+
+        return user
 
     @staticmethod
-    def verify_refresh_token(token: str):
-        """Verify a refresh JWT and return the active user if valid.
-        Also invalidates tokens issued before last password change."""
+    def verify_refresh_token(refresh_token: str) -> "User | None":
+        """Validate a refresh token and return the associated active user."""
         try:
             payload = jwt.decode(
-                token,
-                current_app.config['SECRET_KEY'],
-                algorithms=['HS256']
+                refresh_token,
+                current_app.config["SECRET_KEY"],
+                algorithms=["HS256"],
             )
-
-            if payload.get('type') != 'refresh':
-                return None
-
-            user = User.query.get(payload.get('user_id'))
-            if not user or not user.active:
-                return None
-
-            iat = payload.get('iat')
-            if iat is not None and user.password_changed_at is not None:
-                if isinstance(iat, (int, float)):
-                    issued_at = datetime.utcfromtimestamp(iat)
-                else:
-                    issued_at = iat
-                if issued_at < user.password_changed_at:
-                    return None
-
-            return user
-
         except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, KeyError, TypeError):
             return None
+
+        if payload.get("type") != "refresh":
+            return None
+
+        user_id = payload.get("user_id")
+        user = User.query.get(user_id) if user_id is not None else None
+        if not user or not user.active:
+            return None
+
+        iat = payload.get("iat")
+        if iat is not None and user.password_changed_at is not None:
+            if isinstance(iat, (int, float)):
+                issued_at = datetime.utcfromtimestamp(iat)
+            else:
+                issued_at = iat
+            if issued_at < user.password_changed_at:
+                return None
+
+        return user
     
     def has_permission(self, permission):
         """Check if user has specific permission."""
