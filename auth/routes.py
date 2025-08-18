@@ -1,11 +1,13 @@
-from flask import request, jsonify, current_app, g
+# auth/routes.py - FIXED VERSION
+from flask import Blueprint, request, jsonify, current_app, g
 from marshmallow import Schema, fields, ValidationError, validate
 from datetime import datetime
-from .models import User, db
+from models import db  # Import from models, not local
+from .models import User  # Import User from local auth.models
 import re
 
-# Import the auth blueprint from routes/auth.py
-from routes.auth import auth_bp
+# Create the auth blueprint HERE, not import it
+auth_bp = Blueprint('auth', __name__)
 
 # Validation schemas
 class LoginSchema(Schema):
@@ -165,3 +167,46 @@ def get_profile():
     except Exception as e:
         current_app.logger.error(f'Profile retrieval error: {str(e)}')
         return jsonify({'error': 'Failed to retrieve profile'}), 500
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    """User logout endpoint."""
+    try:
+        # In a stateless JWT system, logout is handled client-side
+        # But we can track it for audit purposes
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+            user = User.verify_token(token)
+            if user:
+                current_app.logger.info(f'User {user.username} logged out')
+        
+        return jsonify({'message': 'Logout successful'})
+        
+    except Exception as e:
+        current_app.logger.error(f'Logout error: {str(e)}')
+        return jsonify({'error': 'Logout failed'}), 500
+
+@auth_bp.route('/refresh', methods=['POST'])
+def refresh_token():
+    """Refresh access token using refresh token."""
+    try:
+        data = request.json
+        if not data or 'refresh_token' not in data:
+            return jsonify({'error': 'Refresh token required'}), 400
+        
+        user = User.verify_refresh_token(data['refresh_token'])
+        if not user:
+            return jsonify({'error': 'Invalid or expired refresh token'}), 401
+        
+        # Generate new access token
+        new_access_token = user.generate_access_token()
+        
+        return jsonify({
+            'access_token': new_access_token,
+            'message': 'Token refreshed successfully'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f'Token refresh error: {str(e)}')
+        return jsonify({'error': 'Token refresh failed'}), 500
