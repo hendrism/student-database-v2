@@ -1,9 +1,12 @@
 # routes/calendar.py - FullCalendar API integration
-from flask import Blueprint, request, jsonify, current_app, g
-from marshmallow import Schema, fields, ValidationError, validate
 from datetime import datetime, date, time, timedelta
-from models import db, Session, Student
+
+from flask import Blueprint, current_app, jsonify, request
+from marshmallow import Schema, ValidationError, fields, validate
+
 from auth.decorators import require_auth, require_permission
+from extensions import db
+from models import Session, Student
 
 calendar_bp = Blueprint('calendar', __name__)
 

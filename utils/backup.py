@@ -1,13 +1,15 @@
-import os
-import json
 import gzip
+import json
+import logging
+import os
 import shutil
 import sqlite3
 from datetime import datetime, date, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from models import db, Student, Goal, Objective, Session, TrialLog, SOAPNote, User
-import logging
+
+from extensions import db
+from models import Goal, Objective, SOAPNote, Session, Student, TrialLog, User
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,9 @@
 # utils/quarterly_reports.py - Comprehensive quarterly report generation
-from models import Student, Goal, Objective, TrialLog, Session, QuarterlyReport, db
 from datetime import datetime, date, timedelta
 import calendar
+
+from extensions import db
+from models import Goal, Objective, QuarterlyReport, Session, Student, TrialLog
 
 class QuarterlyReportGenerator:
     """Generate comprehensive quarterly progress reports."""

@@ -2,15 +2,14 @@
 
 import os
 import logging
-from datetime import datetime, timedelta
 from pathlib import Path
-from flask import Flask, request, g
-from flask_migrate import Migrate
-from flask_cors import CORS
 
-# Import your custom modules
+from flask import Flask
+from flask_cors import CORS
+from flask_migrate import Migrate
+
 from config.settings import config
-from models import db
+from extensions import db
 
 def create_app(config_name=None):
     """Application factory pattern for better organization."""

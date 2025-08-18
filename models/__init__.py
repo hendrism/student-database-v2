@@ -1,10 +1,21 @@
-from flask_sqlalchemy import SQLAlchemy
+"""Model package exports and database instance."""
 
-db = SQLAlchemy()
+from extensions import db
 
-# Import all models so they're available when importing from models
+from .user import User
 from .student import Student, Goal, Objective
 from .session import Session, TrialLog
 from .soap import SOAPNote
-# Import User from auth package (moved from models.auth to avoid duplication)
-from auth.models import User
+
+__all__ = [
+    'db',
+    'User',
+    'Student',
+    'Goal',
+    'Objective',
+    'Session',
+    'TrialLog',
+    'SOAPNote',
+]
+
+

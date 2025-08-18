@@ -1,6 +1,9 @@
-from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
-from models import db, Student, Goal, Objective, TrialLog, Session
+
+from flask import Blueprint, current_app, jsonify, request
+
+from extensions import db
+from models import Goal, Objective, Session, Student, TrialLog
 
 api_bp = Blueprint('api', __name__)
 

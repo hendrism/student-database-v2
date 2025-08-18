@@ -1,7 +1,9 @@
-from flask import Blueprint, request, jsonify, g
-from marshmallow import Schema, fields, ValidationError, validate
-from models import db, Student, Goal, Objective
+from flask import Blueprint, jsonify, request
+from marshmallow import Schema, ValidationError, fields, validate
+
 from auth.decorators import require_auth, require_permission
+from extensions import db
+from models import Goal, Objective, Student
 
 students_bp = Blueprint('students', __name__, url_prefix='/api/students')
 

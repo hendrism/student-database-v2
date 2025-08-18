@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from sqlalchemy.ext.hybrid import hybrid_property
-from . import db
+
+from extensions import db
 import uuid
 
 class AuditMixin:

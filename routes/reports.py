@@ -1,9 +1,12 @@
-from flask import Blueprint, request, jsonify, make_response
-from auth.decorators import token_required, role_required
-from models import db, Student, Goal, Objective, Session, TrialLog, SOAPNote
-from utils.validators import validate_date_range
-from datetime import datetime, date, timedelta
 import logging
+from datetime import datetime, date, timedelta
+
+from flask import Blueprint, jsonify, make_response, request
+
+from auth.decorators import role_required, token_required
+from extensions import db
+from models import Goal, Objective, SOAPNote, Session, Student, TrialLog
+from utils.validators import validate_date_range
 
 # Import report functions locally to handle missing dependencies
 try:

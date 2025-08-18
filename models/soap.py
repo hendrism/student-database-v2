@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from . import db
+from extensions import db
 
 class SOAPNote(db.Model):
     """SOAP Note model for clinical documentation."""

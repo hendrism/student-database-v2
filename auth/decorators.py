@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import request, jsonify, g
-from .models import User
+from models import User
 
 def require_auth(f):
     """Decorator to require authentication."""

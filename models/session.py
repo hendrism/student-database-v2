@@ -1,6 +1,7 @@
 from datetime import datetime, date, time
 from sqlalchemy.ext.hybrid import hybrid_property
-from . import db
+
+from extensions import db
 
 class Session(db.Model):
     """Session model for scheduling and tracking appointments."""

@@ -1,8 +1,11 @@
-from flask import Blueprint, request, jsonify
-from marshmallow import Schema, fields, ValidationError
-from models import db, Session, Student
-from auth.decorators import require_auth
 from datetime import datetime, date
+
+from flask import Blueprint, jsonify, request
+from marshmallow import Schema, ValidationError, fields, validate
+
+from auth.decorators import require_auth
+from extensions import db
+from models import Session, Student
 
 sessions_bp = Blueprint('sessions', __name__, url_prefix='/api/sessions')
 

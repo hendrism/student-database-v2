@@ -1,8 +1,10 @@
 from datetime import datetime, date, timedelta
-from models import db, Student, Goal, Objective, Session, TrialLog, SOAPNote
-import io
 import base64
+import io
 from typing import Dict, List, Optional, Tuple
+
+from extensions import db
+from models import Goal, Objective, SOAPNote, Session, Student, TrialLog
 
 # Optional imports for visualization and export
 try:

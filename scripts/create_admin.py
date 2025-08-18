@@ -6,7 +6,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import create_app
-from models import db, User
+from extensions import db
+from models import User
 
 def create_admin():
     app = create_app()

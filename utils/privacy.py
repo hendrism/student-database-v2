@@ -1,10 +1,12 @@
 import hashlib
-import uuid
+import logging
 import re
+import uuid
 from datetime import datetime, date, timedelta
 from typing import Dict, List, Optional, Tuple
-from models import db, Student, SOAPNote, TrialLog
-import logging
+
+from extensions import db
+from models import SOAPNote, Student, TrialLog
 
 logger = logging.getLogger(__name__)
 

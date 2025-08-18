@@ -1,4 +1,6 @@
-# routes/__init__.py - FIXED VERSION
+# routes/__init__.py
+from datetime import datetime
+
 from flask import Blueprint
 
 def register_blueprints(app):
@@ -6,7 +8,7 @@ def register_blueprints(app):
     
     # Import blueprints from their correct locations
     from .api import api_bp
-    from auth.routes import auth_bp  # Import from auth package, not routes
+    from .auth import auth_bp
     from .students import students_bp
     from .sessions import sessions_bp
     from .soap import soap_bp
@@ -50,5 +52,5 @@ def register_blueprints(app):
         return {
             'status': 'healthy',
             'timestamp': datetime.utcnow().isoformat(),
-            'version': '2.0.0'
+            'version': '2.0.0',
         }
